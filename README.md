@@ -50,6 +50,24 @@ npm install
 npm run build
 ```
 
+### Debian / Ubuntu one-shot setup (incl. headless)
+
+On a Debian-based system you can install everything — system packages, the
+`pass` keychain backend Bridge needs when there's no GUI, Node.js, Proton
+Bridge, and this MCP's build — with the included script:
+
+```bash
+./install-debian.sh
+```
+
+It's idempotent (safe to re-run) and prints the remaining one-time steps
+(`protonmail-bridge --cli` to log in, then run Bridge in the background). If the
+default Bridge version 404s, override it:
+
+```bash
+BRIDGE_DEB_URL="https://proton.me/download/bridge/protonmail-bridge_X.Y.Z-1_amd64.deb" ./install-debian.sh
+```
+
 ## Configuration
 
 All configuration is via environment variables (see [`.env.example`](.env.example)):
