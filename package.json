@@ -1,6 +1,6 @@
 {
   "name": "proton-mcp-unofficial",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Unofficial MCP server that lets an LLM send and read email through Proton Mail Bridge (local IMAP/SMTP). Not affiliated with Proton AG.",
   "type": "module",
   "repository": {
