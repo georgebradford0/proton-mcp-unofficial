@@ -1,0 +1,47 @@
+{
+  "name": "proton-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that lets an LLM send and read email through Proton Mail Bridge (local IMAP/SMTP).",
+  "type": "module",
+  "bin": {
+    "proton-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "proton",
+    "protonmail",
+    "proton-bridge",
+    "email",
+    "imap",
+    "smtp",
+    "llm"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "imapflow": "^1.0.0",
+    "mailparser": "^3.7.0",
+    "nodemailer": "^7.0.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/mailparser": "^3.4.0",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.0",
+    "typescript": "^5.5.0"
+  }
+}
