@@ -458,62 +458,21 @@ server.registerTool(
     title: "List your sendable addresses",
     description:
       "List the email addresses (aliases) on this Proton account that you can " +
-      "send from. Bridge exposes no address list directly, so this is derived " +
-      "from any addresses you've sent as (scanned from the Sent folder) plus " +
-      "any configured via PROTON_BRIDGE_ADDRESSES. Pass any of these as the " +
-      "'from' argument of send_email.",
-    inputSchema: {
-      scan_limit: z
-        .number()
-        .int()
-        .min(0)
-        .max(2000)
-        .default(500)
-        .describe(
-          "How many recent Sent messages to scan for sender addresses (0 to " +
-            "skip scanning and only use the configured/primary addresses).",
-        ),
-    },
+      "send from. This is the configured set (PROTON_BRIDGE_ADDRESSES) plus the " +
+      "default sender. Pass any of these as the 'from' argument of send_email; " +
+      "omitting 'from' uses the default.",
+    inputSchema: {},
   },
-  async ({ scan_limit }) => {
+  async () => {
     const cfg = loadConfig();
-    // Case-insensitive set, but remember the first-seen original casing.
+    // Case-insensitive de-dupe, preserving first-seen casing.
     const seen = new Map<string, string>();
     const add = (addr?: string) => {
       const a = addr?.trim();
       if (a && !seen.has(a.toLowerCase())) seen.set(a.toLowerCase(), a);
     };
-    add(cfg.from); // primary / default sender
-    for (const a of cfg.addresses) add(a); // operator-configured aliases
-
-    let scannedNote = "";
-    if (scan_limit > 0) {
-      await withImap(async (client) => {
-        const boxes = await client.list();
-        const sent =
-          boxes.find((b) => b.specialUse === "\\Sent")?.path ?? "Sent";
-        try {
-          const lock = await client.getMailboxLock(sent);
-          try {
-            const exists = (client.mailbox as MailboxObject).exists;
-            if (exists) {
-              const start = Math.max(1, exists - scan_limit + 1);
-              for await (const msg of client.fetch(`${start}:*`, {
-                uid: true,
-                envelope: true,
-              })) {
-                for (const f of msg.envelope?.from ?? []) add(f.address);
-              }
-            }
-            scannedNote = `Scanned up to ${scan_limit} messages in "${sent}".`;
-          } finally {
-            lock.release();
-          }
-        } catch {
-          scannedNote = `(Could not open a Sent folder to scan.)`;
-        }
-      });
-    }
+    add(cfg.from); // default sender (PROTON_DEFAULT_ADDRESS)
+    for (const a of cfg.addresses) add(a); // PROTON_BRIDGE_ADDRESSES
 
     const addresses = [...seen.values()];
     const lines = addresses.map((a) =>
@@ -522,9 +481,9 @@ server.registerTool(
     return text(
       `Sendable addresses (${addresses.length}):\n` +
         lines.join("\n") +
-        (scannedNote ? `\n\n${scannedNote}` : "") +
-        `\n\nUse any of these as the 'from' argument of send_email. ` +
-        `If one is missing, add it to PROTON_BRIDGE_ADDRESSES.`,
+        `\n\nUse any of these as the 'from' argument of send_email; omit it to ` +
+        `send from the default. To change the set, edit PROTON_BRIDGE_ADDRESSES ` +
+        `(and PROTON_DEFAULT_ADDRESS for the default sender).`,
     );
   },
 );

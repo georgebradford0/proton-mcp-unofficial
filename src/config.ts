@@ -37,12 +37,16 @@ export interface ProtonConfig {
   smtpPort: number;
   username: string;
   password: string;
-  /** Address used in the From header when sending. Defaults to username. */
+  /**
+   * Default From address used by send_email when no `from` is given.
+   * Sourced from PROTON_DEFAULT_ADDRESS (preferred), then the legacy
+   * PROTON_BRIDGE_FROM, then the account username.
+   */
   from: string;
   /**
-   * Extra account addresses/aliases you can send from, in addition to any
-   * discovered by scanning the Sent folder. From PROTON_BRIDGE_ADDRESSES
-   * (comma-separated). Used by the list_addresses tool.
+   * The account's addresses/aliases you can send from. From
+   * PROTON_BRIDGE_ADDRESSES (comma-separated). This is the authoritative list
+   * returned by the list_addresses tool.
    */
   addresses: string[];
   /**
@@ -65,7 +69,10 @@ export function loadConfig(): ProtonConfig {
     smtpPort: int(process.env.PROTON_BRIDGE_SMTP_PORT, 1025),
     username,
     password: required("PROTON_BRIDGE_PASSWORD"),
-    from: process.env.PROTON_BRIDGE_FROM?.trim() || username,
+    from:
+      process.env.PROTON_DEFAULT_ADDRESS?.trim() ||
+      process.env.PROTON_BRIDGE_FROM?.trim() ||
+      username,
     addresses: (process.env.PROTON_BRIDGE_ADDRESSES || "")
       .split(",")
       .map((s) => s.trim())

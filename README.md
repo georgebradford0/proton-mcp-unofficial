@@ -62,8 +62,9 @@ All configuration is via environment variables (see [`.env.example`](.env.exampl
 | `PROTON_BRIDGE_HOST` | | `127.0.0.1` | |
 | `PROTON_BRIDGE_IMAP_PORT` | | `1143` | |
 | `PROTON_BRIDGE_SMTP_PORT` | | `1025` | |
-| `PROTON_BRIDGE_FROM` | | = username | Default From header for sent mail. |
-| `PROTON_BRIDGE_ADDRESSES` | | — | Comma-separated aliases for `list_addresses`. |
+| `PROTON_DEFAULT_ADDRESS` | | = username | Default From when `send_email` omits `from`. |
+| `PROTON_BRIDGE_ADDRESSES` | | — | Comma-separated aliases `list_addresses` returns. |
+| `PROTON_BRIDGE_FROM` | | — | Legacy fallback for the default From address. |
 | `PROTON_BRIDGE_TLS_REJECT_UNAUTHORIZED` | | `false` | Set `true` after installing the Bridge CA. |
 
 ## Connect it to an MCP client
