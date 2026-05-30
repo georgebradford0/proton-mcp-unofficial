@@ -20,7 +20,8 @@ This MCP server talks to that local Bridge:
 | `read_message` | Fetch a full message (headers + body) by UID. |
 | `search_messages` | Search by from/to/subject/body/date/unread. |
 | `mark_read` | Add or remove the `\Seen` flag on a message. |
-| `send_email` | Send an email (to/cc/bcc, subject, text/html). |
+| `send_email` | Send an email (to/cc/bcc, subject, text/html, **from** alias). |
+| `list_addresses` | List account addresses/aliases you can send from. |
 
 ## Prerequisites
 
@@ -61,7 +62,8 @@ All configuration is via environment variables (see [`.env.example`](.env.exampl
 | `PROTON_BRIDGE_HOST` | | `127.0.0.1` | |
 | `PROTON_BRIDGE_IMAP_PORT` | | `1143` | |
 | `PROTON_BRIDGE_SMTP_PORT` | | `1025` | |
-| `PROTON_BRIDGE_FROM` | | = username | From header for sent mail. |
+| `PROTON_BRIDGE_FROM` | | = username | Default From header for sent mail. |
+| `PROTON_BRIDGE_ADDRESSES` | | — | Comma-separated aliases for `list_addresses`. |
 | `PROTON_BRIDGE_TLS_REJECT_UNAUTHORIZED` | | `false` | Set `true` after installing the Bridge CA. |
 
 ## Connect it to an MCP client

@@ -40,6 +40,12 @@ export interface ProtonConfig {
   /** Address used in the From header when sending. Defaults to username. */
   from: string;
   /**
+   * Extra account addresses/aliases you can send from, in addition to any
+   * discovered by scanning the Sent folder. From PROTON_BRIDGE_ADDRESSES
+   * (comma-separated). Used by the list_addresses tool.
+   */
+  addresses: string[];
+  /**
    * Whether to verify the TLS certificate. Proton Bridge uses a self-signed
    * certificate, so this defaults to false. Set
    * PROTON_BRIDGE_TLS_REJECT_UNAUTHORIZED=true once you have installed the
@@ -60,6 +66,10 @@ export function loadConfig(): ProtonConfig {
     username,
     password: required("PROTON_BRIDGE_PASSWORD"),
     from: process.env.PROTON_BRIDGE_FROM?.trim() || username,
+    addresses: (process.env.PROTON_BRIDGE_ADDRESSES || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
     rejectUnauthorized: bool(
       process.env.PROTON_BRIDGE_TLS_REJECT_UNAUTHORIZED,
       false,

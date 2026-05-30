@@ -399,13 +399,21 @@ server.registerTool(
       subject: z.string().describe("Email subject line."),
       text: z.string().optional().describe("Plain-text body."),
       html: z.string().optional().describe("HTML body (optional)."),
+      from: z
+        .string()
+        .optional()
+        .describe(
+          "Send from this address. Must be one of your Proton account's own " +
+            "addresses/aliases (use list_addresses to see them). Defaults to " +
+            "the primary account address.",
+        ),
       reply_to: z
         .string()
         .optional()
         .describe("Reply-To address, if different from the sender."),
     },
   },
-  async ({ to, cc, bcc, subject, text: textBody, html, reply_to }) => {
+  async ({ to, cc, bcc, subject, text: textBody, html, from, reply_to }) => {
     if (!textBody && !html) {
       return errorText("Provide a text or html body.");
     }
@@ -420,7 +428,7 @@ server.registerTool(
     });
     try {
       const info = await transport.sendMail({
-        from: cfg.from,
+        from: from || cfg.from,
         to,
         cc,
         bcc,
@@ -430,7 +438,7 @@ server.registerTool(
         replyTo: reply_to,
       });
       return text(
-        `Sent. messageId: ${info.messageId}\nAccepted: ${
+        `Sent from ${from || cfg.from}. messageId: ${info.messageId}\nAccepted: ${
           (info.accepted as string[]).join(", ") || "(none)"
         }${
           (info.rejected as string[]).length
@@ -441,6 +449,83 @@ server.registerTool(
     } finally {
       transport.close();
     }
+  },
+);
+
+server.registerTool(
+  "list_addresses",
+  {
+    title: "List your sendable addresses",
+    description:
+      "List the email addresses (aliases) on this Proton account that you can " +
+      "send from. Bridge exposes no address list directly, so this is derived " +
+      "from any addresses you've sent as (scanned from the Sent folder) plus " +
+      "any configured via PROTON_BRIDGE_ADDRESSES. Pass any of these as the " +
+      "'from' argument of send_email.",
+    inputSchema: {
+      scan_limit: z
+        .number()
+        .int()
+        .min(0)
+        .max(2000)
+        .default(500)
+        .describe(
+          "How many recent Sent messages to scan for sender addresses (0 to " +
+            "skip scanning and only use the configured/primary addresses).",
+        ),
+    },
+  },
+  async ({ scan_limit }) => {
+    const cfg = loadConfig();
+    // Case-insensitive set, but remember the first-seen original casing.
+    const seen = new Map<string, string>();
+    const add = (addr?: string) => {
+      const a = addr?.trim();
+      if (a && !seen.has(a.toLowerCase())) seen.set(a.toLowerCase(), a);
+    };
+    add(cfg.from); // primary / default sender
+    for (const a of cfg.addresses) add(a); // operator-configured aliases
+
+    let scannedNote = "";
+    if (scan_limit > 0) {
+      await withImap(async (client) => {
+        const boxes = await client.list();
+        const sent =
+          boxes.find((b) => b.specialUse === "\\Sent")?.path ?? "Sent";
+        try {
+          const lock = await client.getMailboxLock(sent);
+          try {
+            const exists = (client.mailbox as MailboxObject).exists;
+            if (exists) {
+              const start = Math.max(1, exists - scan_limit + 1);
+              for await (const msg of client.fetch(`${start}:*`, {
+                uid: true,
+                envelope: true,
+              })) {
+                for (const f of msg.envelope?.from ?? []) add(f.address);
+              }
+            }
+            scannedNote = `Scanned up to ${scan_limit} messages in "${sent}".`;
+          } finally {
+            lock.release();
+          }
+        } catch {
+          scannedNote = `(Could not open a Sent folder to scan.)`;
+        }
+      });
+    }
+
+    const addresses = [...seen.values()];
+    const lines = addresses.map((a) =>
+      a.toLowerCase() === cfg.from.toLowerCase() ? `${a}  (default)` : a,
+    );
+    return text(
+      `Sendable addresses (${addresses.length}):\n` +
+        lines.join("\n") +
+        (scannedNote ? `\n\n${scannedNote}` : "") +
+        `\n\nUse any of these as the 'from' argument of send_email. ` +
+        `If one is missing, add it to PROTON_BRIDGE_ADDRESSES.`,
+    );
   },
 );
 
