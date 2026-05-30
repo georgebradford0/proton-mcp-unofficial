@@ -1,0 +1,64 @@
+name: Release
+
+# Publishes to npm whenever a version tag (e.g. v0.1.1) is pushed.
+#
+# Uses npm Trusted Publishing (OIDC) — no NPM_TOKEN secret. Authentication is a
+# short-lived, workflow-scoped OIDC credential, and npm attaches a provenance
+# attestation linking the tarball to this repo + commit.
+#
+# ── One-time setup (required before the first automated run) ──────────────────
+#   1. Publish once manually so the package exists on npm:
+#        npm publish            # with --otp=<code> or a token
+#   2. On npmjs.com → the package → Settings → "Trusted Publisher" →
+#      GitHub Actions, set:
+#        Organization or user : georgebradford0
+#        Repository           : proton-mcp-unofficial
+#        Workflow filename    : release.yml
+#      (Optionally enable "Require two-factor authentication and disallow
+#       tokens" for extra hardening.)
+#
+# ── Cutting a release thereafter ──────────────────────────────────────────────
+#        npm version patch     # bumps package.json + creates the vX.Y.Z tag
+#        git push --follow-tags # pushing the tag triggers this workflow
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch: # allow manual runs from the Actions tab
+
+permissions:
+  contents: read
+  id-token: write # required for OIDC trusted publishing + provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      # Node LTS bundles npm 10.x; OIDC trusted publishing needs npm >= 11.5.
+      - name: Use a trusted-publishing-capable npm
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # Guard against publishing a tag whose version doesn't match package.json.
+      - name: Verify tag matches package.json version
+        run: |
+          PKG_VERSION="v$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "${PKG_VERSION}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} != package.json ${PKG_VERSION}" >&2
+            exit 1
+          fi
+
+      - name: Publish to npm (provenance via OIDC)
+        run: npm publish --provenance --access public
