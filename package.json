@@ -1,20 +1,27 @@
 {
-  "name": "proton-mcp",
+  "name": "proton-mcp-unofficial",
   "version": "0.1.0",
-  "description": "MCP server that lets an LLM send and read email through Proton Mail Bridge (local IMAP/SMTP).",
+  "description": "Unofficial MCP server that lets an LLM send and read email through Proton Mail Bridge (local IMAP/SMTP). Not affiliated with Proton AG.",
   "type": "module",
   "bin": {
-    "proton-mcp": "dist/index.js"
+    "proton-mcp-unofficial": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    ".env.example"
   ],
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
     "start": "node dist/index.js",
     "dev": "tsc && node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "mcp",

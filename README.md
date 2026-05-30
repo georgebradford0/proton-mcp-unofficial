@@ -1,7 +1,18 @@
-# proton-mcp
+# proton-mcp-unofficial
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server that lets an
 LLM **read and send email through [Proton Mail Bridge](https://proton.me/mail/bridge)**.
+
+> **Unofficial.** This is a community project and is **not affiliated with,
+> endorsed by, or supported by Proton AG.**
+
+Install from npm:
+
+```bash
+npx -y proton-mcp-unofficial      # run directly
+# or
+npm install -g proton-mcp-unofficial
+```
 
 Proton Mail is end-to-end encrypted and has no plain IMAP/SMTP API. Proton
 Bridge is Proton's official desktop app that runs a **local** IMAP and SMTP
@@ -78,8 +89,8 @@ Add to your MCP config (`claude_desktop_config.json`, or via
 {
   "mcpServers": {
     "proton": {
-      "command": "node",
-      "args": ["/absolute/path/to/proton-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "proton-mcp-unofficial"],
       "env": {
         "PROTON_BRIDGE_USERNAME": "you@proton.me",
         "PROTON_BRIDGE_PASSWORD": "your-bridge-password"
@@ -95,7 +106,7 @@ For Claude Code specifically:
 claude mcp add proton \
   -e PROTON_BRIDGE_USERNAME=you@proton.me \
   -e PROTON_BRIDGE_PASSWORD=your-bridge-password \
-  -- node /absolute/path/to/proton-mcp/dist/index.js
+  -- npx -y proton-mcp-unofficial
 ```
 
 ## Quick local test
