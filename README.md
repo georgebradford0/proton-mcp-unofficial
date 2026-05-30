@@ -55,13 +55,6 @@ disabled by default in this server. To enable it, install the Bridge CA
 certificate (Bridge → Settings → "Install" / export the cert into your trust
 store) and set `PROTON_BRIDGE_TLS_REJECT_UNAUTHORIZED=true`.
 
-## Install & build
-
-```bash
-npm install
-npm run build
-```
-
 ## Configuration
 
 All configuration is via environment variables (see [`.env.example`](.env.example)):
@@ -117,19 +110,30 @@ MCP Inspector:
 ```bash
 PROTON_BRIDGE_USERNAME=you@proton.me \
 PROTON_BRIDGE_PASSWORD=your-bridge-password \
-npx @modelcontextprotocol/inspector node dist/index.js
+npx @modelcontextprotocol/inspector npx -y proton-mcp-unofficial
 ```
 
 Then call `list_mailboxes`, `list_messages`, etc. from the Inspector UI.
 
 ## Security notes
 
-- Credentials are read from environment variables only; nothing is written to
-  disk. Keep your `.env` out of version control (it is `.gitignore`d).
+- Credentials are read from environment variables only (set them in your MCP
+  client config); nothing is written to disk. If you use a `.env` file, keep it
+  out of version control.
 - The server communicates only with your **local** Bridge — no third party sees
   your password or mail.
 - `send_email` sends real email. Review what the LLM drafts before letting it
   send autonomously.
+
+## Development (from source)
+
+```bash
+git clone https://github.com/georgebradford0/proton-mcp-unofficial.git
+cd proton-mcp-unofficial
+npm install
+npm run build
+npm start            # runs dist/index.js over stdio
+```
 
 ## License
 
